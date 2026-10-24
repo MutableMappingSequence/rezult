@@ -1,0 +1,46 @@
+[project]
+name = "rezult"
+version = "0.2.0"
+description = "Rust-inspired `Result` and `Option` types for Python 3.12+."
+readme = "README.md"
+license = "MIT"
+authors = [
+    { name = "Sequence", email = "3863887959@qq.com" }
+]
+requires-python = ">=3.12"
+dependencies = []
+
+keywords = ["rust", "rs", "exception", "result", "option", "rusty"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Utilities",
+    "Typing :: Typed"
+]
+
+[dependency-groups]
+dev = [
+    "mypy>=1.11",
+    "pytest>=8.3",
+    "pytest-cov>=7.1.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = ["-ra", "--strict-markers", "--strict-config"]
+filterwarnings = ["error"]
+
+[[tool.uv.index]]
+url = "https://pypi.tuna.tsinghua.edu.cn/simple"
+default = true
+
+[build-system]
+requires = ["uv_build>=0.12.7,<0.13.0"]
+build-backend = "uv_build"
