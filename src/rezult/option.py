@@ -9,18 +9,9 @@ from __future__ import annotations
 from collections.abc import Callable
 from functools import wraps
 from inspect import iscoroutinefunction
-from typing import TYPE_CHECKING
-from typing import Any
-from typing import ClassVar
-from typing import Final
-from typing import Never
-from typing import Self
-from typing import final
+from typing import TYPE_CHECKING, Any, ClassVar, Final, Never, Self, final
 
-from .result import Err
-from .result import Ok
-from .result import UnwrapError
-
+from .result import Err, Ok, UnwrapError
 
 if TYPE_CHECKING:
     from .result import Result
@@ -56,9 +47,7 @@ class Option[T]:
         Raises:
             NotImplementedError: Always, when called on ``Option`` directly.
         """
-        raise NotImplementedError(
-            "You should implement __init__ for the variant first."
-        )
+        raise NotImplementedError("You should implement __init__ for the variant first.")
 
     # ==========
     # Assertions
@@ -577,11 +566,13 @@ class Nothing(Option[Any]):
         return (Nothing, ())
 
 
-def option_eval[T](expr: Callable[[], T | None]) -> Option[T]:
+def option_eval[T](expr: Callable[..., T | None], *args, **kwargs) -> Option[T]:
     """Evaluate ``expr`` eagerly, converting ``None`` into ``Nothing``.
 
     Args:
-        expr: Zero-argument callable to evaluate.
+        expr: Callable to evaluate.
+        *args: Positional arguments forwarded to ``expr``.
+        **kwargs: Keyword arguments forwarded to ``expr``.
 
     Returns:
         ``Some`` with the returned value, or ``Nothing`` when it returns
@@ -592,8 +583,10 @@ def option_eval[T](expr: Callable[[], T | None]) -> Option[T]:
         Some(1)
         >>> option_eval(lambda: None)
         Nothing
+        >>> option_eval(lambda a: a, None)
+        Nothing
     """
-    value = expr()
+    value = expr(*args, **kwargs)
     return Nothing() if value is None else Some(value)
 
 

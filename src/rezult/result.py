@@ -6,16 +6,11 @@ making error handling visible in the type signature.
 
 from __future__ import annotations
 
+from abc import abstractmethod
 from collections.abc import Callable
 from functools import wraps
 from inspect import iscoroutinefunction
-from typing import TYPE_CHECKING
-from typing import Any
-from typing import Final
-from typing import Protocol
-from typing import Self
-from typing import cast
-from typing import overload
+from typing import TYPE_CHECKING, Any, Final, Protocol, Self, cast, overload
 
 
 if TYPE_CHECKING:
@@ -58,6 +53,10 @@ class Result[T, E]:
         1
     """
 
+    __slots__ = ("value",)
+    __match_args__ = ("value",)
+
+    @abstractmethod
     def __init__(self) -> None:
         """Initialize a result variant.
 
@@ -66,9 +65,7 @@ class Result[T, E]:
         Raises:
             NotImplementedError: Always, when called on ``Result`` directly.
         """
-        raise NotImplementedError(
-            "You should implement __init__ for the variant first."
-        )
+        raise NotImplementedError("You should implement __init__ for the variant first.")
 
     # ==========
     # Assertions
@@ -134,8 +131,7 @@ class Result[T, E]:
         Returns:
             ``Some`` containing the success value, or ``Nothing`` for ``Err``.
         """
-        from .option import Nothing
-        from .option import Some
+        from .option import Nothing, Some
 
         match self:
             case Ok(value):
@@ -151,8 +147,7 @@ class Result[T, E]:
         Returns:
             ``Some`` containing the error, or ``Nothing`` for ``Ok``.
         """
-        from .option import Nothing
-        from .option import Some
+        from .option import Nothing, Some
 
         match self:
             case Ok():
@@ -456,8 +451,7 @@ class Result[T, E]:
             >>> Result.transpose(Ok(Nothing()))
             Nothing
         """
-        from .option import Nothing
-        from .option import Some
+        from .option import Nothing, Some
 
         match result:
             case Ok(Some(value)):
@@ -502,9 +496,6 @@ class Ok[T](Result[T, Any]):
         value: The contained success value.
     """
 
-    __slots__ = ("value",)
-    __match_args__ = ("value",)
-
     def __init__(self, value: T) -> None:
         """Initialize the success variant.
 
@@ -535,9 +526,6 @@ class Err[E](Result[Any, E]):
         value: The contained error value.
     """
 
-    __slots__ = ("value",)
-    __match_args__ = ("value",)
-
     def __init__(self, value: E) -> None:
         """Initialize the failure variant.
 
@@ -558,11 +546,13 @@ class Err[E](Result[Any, E]):
         return hash((Err, self.value))
 
 
-def result_eval[T](expr: Callable[[], T]) -> Result[T, Exception]:
+def result_eval[T](expr: Callable[..., T], *args, **kwargs) -> Result[T, Exception]:
     """Evaluate ``expr`` eagerly, capturing any ``Exception`` as ``Err``.
 
     Args:
-        expr: Zero-argument callable to evaluate.
+        expr: Callable to evaluate.
+        *args: Positional arguments forwarded to ``expr``.
+        **kwargs: Keyword arguments forwarded to ``expr``.
 
     Returns:
         ``Ok`` with the returned value, or ``Err`` with the raised exception.
@@ -572,9 +562,11 @@ def result_eval[T](expr: Callable[[], T]) -> Result[T, Exception]:
         Ok(2)
         >>> result_eval(lambda: 1 / 0)
         Err(ZeroDivisionError('division by zero'))
+        >>> result_eval(lambda a, b: a + b, 1, 2)
+        Ok(3)
     """
     try:
-        return Ok(expr())
+        return Ok(expr(*args, **kwargs))
     except Exception as e:
         return Err(e)
 
@@ -602,14 +594,8 @@ def _catch[E: BaseException](*exceptions: type[E]) -> _ResultDecorator[E]:
 
 @overload
 def resulty() -> _ResultDecorator[Exception]: ...
-
-
 @overload
-def resulty[E: BaseException](
-    catch: type[E], *catches: type[E]
-) -> _ResultDecorator[E]: ...
-
-
+def resulty[E: BaseException](catch: type[E], *catches: type[E]) -> _ResultDecorator[E]: ...
 def resulty(catch: Any = None, *catches: Any) -> Any:
     """Decorate a function so raised exceptions become ``Err`` values.
 
@@ -644,8 +630,6 @@ def resulty(catch: Any = None, *catches: Any) -> Any:
         return _catch(Exception)
 
     if not (isinstance(catch, type) and issubclass(catch, BaseException)):
-        raise TypeError(
-            "resulty() expects exception types; write @resulty() or @resulty(SomeError)"
-        )
+        raise TypeError("resulty() expects exception types; write @resulty() or @resulty(SomeError)")
 
     return _catch(catch, *catches)
