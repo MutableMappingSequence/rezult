@@ -1,6 +1,6 @@
 [project]
 name = "rezult"
-version = "0.2.0"
+version = "0.2.1"
 description = "Rust-inspired `Result` and `Option` types for Python 3.12+."
 readme = "README.md"
 license = "MIT"
