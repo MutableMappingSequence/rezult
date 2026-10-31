@@ -124,7 +124,7 @@ def validate(age: int) -> Result[int, str]:
 
 result = (
     divide(36, 2)
-    .map(lambda value: int(value))
+    .map(int)
     .and_then_res(validate)
 )
 print(result)  # Ok(18)
@@ -163,8 +163,11 @@ print(find_user(3).unwrap_or("anonymous"))  # anonymous
 Options chain in the same way:
 
 ```python
+from functools import partial
+from operator import ne
+
 find_user(1).map(str.upper)                 # Some('ALICE')
-find_user(1).filter(lambda name: name != "alice")  # Nothing
+find_user(1).filter(partial(ne, "alice"))   # Nothing
 find_user(3).or_opt(Some("guest"))          # Some('guest')
 ```
 
@@ -217,16 +220,16 @@ coroutine.
 
 ### Evaluating expressions
 
-If you already have a zero-argument callable, use `result_eval` or
+If you already have a callable, use `result_eval` or
 `option_eval`:
 
 ```python
 from rezult import option_eval, result_eval
 
-result_eval(lambda: int("42"))   # Ok(42)
-result_eval(lambda: 1 / 0)       # Err(ZeroDivisionError('division by zero'))
-option_eval(lambda: None)        # Nothing
-option_eval(lambda: "value")     # Some('value')
+result_eval(lambda: 1 / 0)      # Err(ZeroDivisionError('division by zero'))
+result_eval(int, "42")          # Ok(42)
+option_eval(lambda: None)       # Nothing
+option_eval(lambda: "value")    # Some('value')
 ```
 
 ## API at a glance
@@ -242,8 +245,8 @@ option_eval(lambda: "value")     # Some('value')
 | `UnwrapError` | Raised by `unwrap`, `expect`, `unwrap_err`, and `expect_err` |
 | `resulty(...)` | Decorator: exceptions become `Err` |
 | `optionally` | Decorator: `None` becomes `Nothing()` |
-| `result_eval(thunk)` | Evaluate a callable, capturing exceptions as `Err` |
-| `option_eval(thunk)` | Evaluate a callable, converting `None` to `Nothing()` |
+| `result_eval(expr, *args, **kwargs)` | Evaluate a callable, capturing exceptions as `Err` |
+| `option_eval(expr, *args, **kwargs)` | Evaluate a callable, converting `None` to `Nothing()` |
 
 Both types support structural pattern matching, equality by variant and
 contained value, and hashing.
