@@ -566,7 +566,7 @@ class Nothing(Option[Any]):
         return (Nothing, ())
 
 
-def option_eval[T](expr: Callable[..., T | None], *args, **kwargs) -> Option[T]:
+def option_eval[**P, T](expr: Callable[P, T | None], *args: P.args, **kwargs: P.kwargs) -> Option[T]:
     """Evaluate ``expr`` eagerly, converting ``None`` into ``Nothing``.
 
     Args:
